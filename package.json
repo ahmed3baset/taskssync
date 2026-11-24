@@ -1,0 +1,21 @@
+{
+  "name": "taskssync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "قائمة تاسكات PWA مع مزامنة مباشرة بين الكمبيوتر والايفون",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test/smoke.js",
+    "icons": "node scripts/generate-icons.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "ws": "^8.18.0"
+  }
+}

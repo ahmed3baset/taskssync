@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="تاسكاتي" />
+    <meta name="description" content="قائمة تاسكات تتزامن لحظياً بين الكمبيوتر والايفون" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <title>تاسكاتي</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">✓</span>
+          <div>
+            <h1>تاسكاتي</h1>
+            <p>قائمتك على كل أجهزتك</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="status" class="status" title="حالة المزامنة">…</span>
+          <button id="syncBtn" class="icon-btn" type="button" title="مزامنة الآن" aria-label="مزامنة الآن">⟳</button>
+        </div>
+      </header>
+
+      <form id="addForm" class="add-row">
+        <input
+          id="taskInput"
+          type="text"
+          maxlength="500"
+          placeholder="اكتب تاسك جديد..."
+          autocomplete="off"
+          aria-label="تاسك جديد"
+          required
+        />
+        <button type="submit" class="primary">إضافة</button>
+      </form>
+
+      <nav class="filters" aria-label="تصفية التاسكات">
+        <button class="filter active" type="button" data-filter="all">الكل <span id="countAll">0</span></button>
+        <button class="filter" type="button" data-filter="active">نشطة <span id="countActive">0</span></button>
+        <button class="filter" type="button" data-filter="done">مكتملة <span id="countDone">0</span></button>
+        <button id="clearDone" class="text-btn" type="button" disabled>حذف المكتملة</button>
+      </nav>
+
+      <main>
+        <ul id="list" class="list" aria-live="polite"></ul>
+        <div id="empty" class="empty" hidden>
+          <div class="empty-icon" aria-hidden="true">☑</div>
+          <h2 id="emptyTitle">القائمة فاضية</h2>
+          <p>اكتب أول تاسك في الصندوق فوق وهيلاقي طريقه لكل أجهزتك.</p>
+        </div>
+      </main>
+
+      <footer class="foot">
+        على الايفون: افتح الرابط في Safari ← مشاركة ← إضافة إلى الشاشة الرئيسية.
+        على الكمبيوتر: زر التثبيت في شريط العنوان بيخليها زي برنامج.
+      </footer>
+    </div>
+
+    <div id="authOverlay" class="overlay" hidden>
+      <form id="authForm" class="auth-card">
+        <h2>كلمة مرور التاسكات</h2>
+        <p id="authMessage">الرابط ده محمي. اكتب كلمة المرور اللي اتحطت على السيرفر.</p>
+        <input id="authInput" type="password" autocomplete="current-password" placeholder="كلمة المرور" required />
+        <button type="submit" class="primary">دخول</button>
+      </form>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
