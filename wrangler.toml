@@ -1,0 +1,11 @@
+name = "taskssync"
+main = "worker.js"
+compatibility_date = "2026-11-24"
+
+[[durable_objects.bindings]]
+name = "TASK_HUB"
+class_name = "TaskHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TaskHub"]

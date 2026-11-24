@@ -8,11 +8,15 @@
 
 | الملف | الوظيفة |
 | --- | --- |
-| `server.js` | API + WebSocket + تقديم الواجهة |
-| `store.js` | تخزين في ملف `data/tasks.json` أو في Postgres لما يتحط `DATABASE_URL` |
+| `server.js` | سيرفر محلي: API + WebSocket + تقديم الواجهة |
+| `store.js` | تخزين محلي في `data/tasks.json` أو Postgres لما يتحط `DATABASE_URL` |
+| `worker.js` | نسخة النشر: توجيه الطلبات + التحقق من كلمة المرور + تقديم ملفات الـ PWA |
+| `do.js` | Durable Object: تخزين التاسكات في SQLite + بثّ التحديثات لكل الأجهزة |
+| `assets.generated.js` | ملفات الواجهة مجمّعة جوهWorker (بيتولد تلقائياً) |
+| `wrangler.toml` | إعدادات النشر على Cloudflare |
 | `public/` | واجهة الـ PWA (HTML/CSS/JS + Service Worker + أيقونات) |
 | `scripts/generate-icons.js` | توليد أيقونات PWA |
-| `Dockerfile` | للنشر على خدمة سحابية |
+| `scripts/build-assets.js` | تحديث `assets.generated.js` بعد تعديل أي ملف في `public/` |
 
 ## تشغيل محلي (للتجربة)
 
@@ -23,7 +27,7 @@ npm.cmd install
 npm.cmd start
 ```
 
-افتح `http://localhost:3000`. أو ببساطة دبل-كلك على `start.cmd` لتشغيل السيرفر.
+افتتح `http://localhost:3000`. أو ببساطة دبل-كلك على `start.cmd` لتشغيل السيرفر.
 
 > ملاحظة على Windows: لو `npm` مبقاش شغال بسبب Execution Policy، استخدم `npm.cmd` زي فوق.
 
@@ -32,42 +36,55 @@ npm.cmd start
 
 ده للاختبار بس — الـ Service Worker والـ PWA الكامل محتاجين HTTPS (أو localhost).
 
-## النشر على النت (زامنة من أي مكان)
+### تجربة نسخة Cloudflare محلياً
 
-الخطة: **Neon** (قاعدة بيانات Postgres مجانية) + **Render** (استضافة الـ web service).
+```powershell
+npx.cmd wrangler dev --local
+```
 
-1. **قاعدة البيانات**
-   - سجّل في [neon.tech](https://neon.tech) وأنشئ project.
-   - انسخ connection string واختر `Pooled connection`، وخلّي في آخره `?sslmode=require`.
+## النشر على النت (زامنة من أي مكان) — بدون بطاقة
 
-2. **السيرفر**
-   - ارفع محتوى `D:\TasksSync` إلى مستودع GitHub جديد (من غير `node_modules` و`data`).
-   - في [render.com](https://render.com) → **New + → Web Service** → اختر المستودع.
-   - Environment: `Docker`. Render هيبني من `Dockerfile` تلقائياً.
-   - أضف متغيرات البيئة:
-     - `DATABASE_URL` = connection string من Neon.
-     - `APP_TOKEN` = كلمة مرور طويلة وعشوائية (مثلاً أنشئها بـ `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`).
-   - Health Check Path: `/api/health`.
-   - بعد النشر، افتح الرابط الذي يظهر لك (بشكل `https://...onrender.com`).
+النسخة المنشورة بتستخدم **Cloudflare Workers + Durable Objects** على الخطة المجانية. كل حاجة في مكان واحد: التخزين، الـ WebSocket، والـ PWA. مفيش كارت بنك ولا قاعدة بيانات منفصلة.
 
-3. **التثبيت على الأجهزة**
+1. **حساب Cloudflare**
+   - سجّل (أو ادخل) في [dash.cloudflare.com](https://dash.cloudflare.com) بالبريد أو GitHub. الخطة المجانية كافية.
+   - من **Workers & Pages** → **Create** → **Worker** → اختار **Start from Hello World** (أو أي قالب) وسمّيه `taskssync`، ثم **Create**. (دي خطوة لإنشاء الاسم بس؛ الكود هيتبدّل في الخطوة 3.)
+
+2. **API Token للنشر من الجهاز**
+   - من [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → قالب **Edit Cloudflare Workers** → **Create Token** → انسخ التوكن.
+
+3. **انشر من `D:\TasksSync`**
+
+   ```powershell
+   $env:CLOUDFLARE_API_TOKEN = "ال-token-اللي-نسخته"
+   npx.cmd wrangler secret put APP_TOKEN
+   npm.cmd run cf:deploy
+   ```
+
+   لما يسألك `wrangler secret put APP_TOKEN` اكتب كلمة مرور طويلة (مثلاً أنشئها بـ `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`). هتُطلب على كل جهاز مرة واحدة وبس.
+
+4. **الرابط النهائي**
+   - بعد النشر هيظهر رابط شكل `https://taskssync.<اسم-الحساب>.workers.dev`.
    - **الايفون**: افتح الرابط في Safari ← زر المشاركة ← *Add to Home Screen*.
    - **الكمبيوتر**: في Chrome/Edge اضغط أيقونة التثبيت في شريط العنوان، وبعدين ثبّت التطبيق لشريط المهام. هيظهر كنافذة مستقلة شبه البرنامج.
 
-4. **كلمة المرور**: أول ما تفتح الرابط على أي جهاز، هتطلب `APP_TOKEN`. أدخلها مرة واحدة وبتتذكر على الجهاز.
+> لو عندك حساب Cloudflare فيه Worker باسم `taskssync` بالفعل، غيّر `name` في `wrangler.toml` لأي اسم تاني (مثلاً `taskssync-ahmed`).
 
 ## أهم ملاحظات
 
-- لو `DATABASE_URL` مش متحط، التاسكات بتتخزن في `data/tasks.json` على الكمبيوتر اللي شغّل السيرفر — ده كافي للتجربة المحلية بس، مش للزامنة برة البيت.
+- التاسكات على النسخة المنشورة متخزنة في Durable Object SQLite جوه Cloudflare — مش في Neon. لو عملت مشروع Neon قبل كده مش محتاجه دلوقتي.
 - `APP_TOKEN` مهم جداً لو الرابط عام؛ من غيره أي حد عنده الرابط يقدر يقرأ ويعدّل تاسكاتك.
 - المزامنة لحظية: أي تعديل على جهاز بيتبعت فوراً لكل الأجهزة المفتوحة. لو جهاز مش متصل، التعديلات بتتصف في طابور محلي لحد ما يرجع الاتصال.
-- متغير `PORT` اختياري (الافتراضي `3000`) وRender بيحطه تلقائياً.
-- متغير `DATA_DIR` اختياري لتحديد مكان ملف التاسكات في وضع التخزين المحلي.
+- السيرفر المحلي (`node server.js`) والنسخة المنشورة (`worker.js`) بيقدّموا نفس الـ API، بس التخزين مختلف.
+- متغير `PORT` اختياري للسيرفر المحلي (الافتراضي `3000`). متغير `DATA_DIR` اختياري لتحديد مكان ملف التاسكات في الوضع المحلي.
 
 ## أوامر مفيدة
 
 ```powershell
-npm.cmd test        # اختبار سريع للـ API والمزامنة بين عميلين
-npm.cmd run icons   # إعادة توليد الأيقونات
-npm.cmd run dev     # تشغيل مع إعادة تحميل تلقائي عند تعديل الكود
+npm.cmd test              # اختبار سريع للسيرفر المحلي والمزامنة بين عميلين
+node test/worker-smoke.js # اختبار نسخة Cloudflare بعد wrangler dev --port 3200
+npm.cmd run icons         # إعادة توليد الأيقونات
+npm.cmd run assets:build  # تحديث ملفات الواجهة داخل الـ Worker
+npm.cmd run cf:deploy     # بناء الأصول + نشر على Cloudflare
+npm.cmd run dev           # تشغيل السيرفر المحلي مع إعادة تحميل تلقائي
 ```

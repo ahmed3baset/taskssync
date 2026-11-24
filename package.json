@@ -8,7 +8,10 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node test/smoke.js",
-    "icons": "node scripts/generate-icons.js"
+    "icons": "node scripts/generate-icons.js",
+    "assets:build": "node scripts/build-assets.js",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "npm run assets:build && wrangler deploy"
   },
   "engines": {
     "node": ">=20"
@@ -17,5 +20,8 @@
     "express": "^4.21.2",
     "pg": "^8.13.1",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.167.0"
   }
 }
