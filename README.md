@@ -64,7 +64,8 @@ npx.cmd wrangler dev --local
    لما يسألك `wrangler secret put APP_TOKEN` اكتب كلمة مرور طويلة (مثلاً أنشئها بـ `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`). هتُطلب على كل جهاز مرة واحدة وبس.
 
 4. **الرابط النهائي**
-   - بعد النشر هيظهر رابط شكل `https://taskssync.<اسم-الحساب>.workers.dev`.
+   - الرابط الحالي بعد النشر: **https://taskssync.taskssync.workers.dev**
+   - لو غيّرت اسم الـ Worker في `wrangler.toml`، الرابط هيبقى `https://<الاسم>.<workers-dev-subdomain>.workers.dev`.
    - **الايفون**: افتح الرابط في Safari ← زر المشاركة ← *Add to Home Screen*.
    - **الكمبيوتر**: في Chrome/Edge اضغط أيقونة التثبيت في شريط العنوان، وبعدين ثبّت التطبيق لشريط المهام. هيظهر كنافذة مستقلة شبه البرنامج.
 
